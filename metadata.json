@@ -1,0 +1,6 @@
+{
+  "name": "Personal Productivity Dashboard",
+  "description": "A professional single-page dashboard to track study tasks, focus time, and achievements with GitHub-style heatmap, analytics, and interactive timers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

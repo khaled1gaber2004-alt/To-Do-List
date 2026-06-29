@@ -1,0 +1,2542 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zenith - Personal Productivity Dashboard</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brandDark: '#09090b',
+            brandCard: '#18181b',
+            brandBorder: '#27272a',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+    }
+    
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+
+    /* Pulse glow effect for timer */
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.7); }
+    }
+    .timer-active {
+      animation: glow 2s infinite;
+    }
+
+    /* Bento Grid Classes */
+    .title-sm {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a1a1aa;
+      margin-bottom: 8px;
+      font-weight: 600;
+      display: block;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="text-zinc-100 bg-brandDark min-h-screen antialiased selection:bg-emerald-500 selection:text-zinc-950 pb-24">
+
+  <!-- Top Full-Width Header -->
+  <header class="w-full relative overflow-hidden border-b border-brandBorder bg-cover bg-center" style="background-image: url('src/assets/images/diverse_header_1782464289977.jpg');">
+    <!-- Gradient Overlay for Contrast -->
+    <div class="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/75 to-zinc-950/90 z-0"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent z-0"></div>
+    
+    <!-- Centered Header Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div class="backdrop-blur-md bg-zinc-950/45 p-5 md:p-6 rounded-2xl border border-zinc-800/45 shadow-2xl max-w-xl">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 via-pink-500 to-amber-500 flex items-center justify-center shadow-lg shadow-pink-500/10 animate-pulse">
+            <i class="fa-solid fa-bolt text-zinc-950 text-xl font-bold"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-white bg-clip-text bg-gradient-to-r from-white via-zinc-100 to-zinc-300">
+              Zenith
+            </h1>
+            <span class="text-[9px] bg-red-500/20 text-red-400 px-2.5 py-0.5 rounded-full border border-red-500/30 font-mono font-bold tracking-wider uppercase">Diverse Edition</span>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-300 mt-3 leading-relaxed">
+          Track your study progress, focus hours, and personal achievements in a futuristic, high-performance interface.
+        </p>
+      </div>
+      
+      <!-- Glassmorphic Live Clock -->
+      <div class="flex flex-col items-end gap-1 text-right font-mono backdrop-blur-md bg-zinc-950/45 p-5 md:p-6 rounded-2xl border border-zinc-800/45 shadow-2xl min-w-[200px]">
+        <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Live Server Time</span>
+        <div class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-300 animate-pulse" id="live-clock">00:00:00</div>
+        <div class="text-[11px] text-zinc-400" id="live-date">Friday, June 26, 2026</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto px-4 py-8 space-y-10" id="main-container">
+
+    <!-- SECTION 1: DASHBOARD -->
+    <section id="dashboard-section" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+        <h2 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Dashboard</h2>
+      </div>
+      
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Card 1: Total Tasks -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between">
+          <div class="space-y-1">
+            <span class="title-sm">Total Tasks</span>
+            <div class="stat-val font-mono" id="stat-total-tasks">0</div>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-zinc-800/40 border border-brandBorder flex items-center justify-center">
+            <i class="fa-solid fa-list-check text-indigo-400 text-lg"></i>
+          </div>
+        </div>
+
+        <!-- Card 2: Completed -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between">
+          <div class="space-y-1">
+            <span class="title-sm">Completed</span>
+            <div class="stat-val font-mono text-emerald-400" id="stat-completed-tasks">0</div>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-check text-emerald-400 text-lg"></i>
+          </div>
+        </div>
+
+        <!-- Card 3: Pending -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between">
+          <div class="space-y-1">
+            <span class="title-sm">Pending</span>
+            <div class="stat-val font-mono text-amber-400" id="stat-pending-tasks">0</div>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-hourglass-start text-amber-400 text-lg"></i>
+          </div>
+        </div>
+
+        <!-- Card 4: Completion Rate -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between">
+          <div class="space-y-1">
+            <span class="title-sm">Completion Rate</span>
+            <div class="stat-val font-mono text-teal-400" id="stat-completion-rate">0%</div>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-bullseye text-teal-400 text-lg"></i>
+          </div>
+        </div>
+
+        <!-- Card 5: Total Study Time -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between">
+          <div class="space-y-1">
+            <span class="title-sm">Total Focus Time</span>
+            <div class="stat-val font-mono text-sky-400" style="font-size: 20px;" id="stat-total-study-time">0h 00m</div>
+          </div>
+          <div class="h-12 w-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
+            <i class="fa-solid fa-hourglass-half text-sky-400 text-lg"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: HEATMAP -->
+    <section id="heatmap-section" class="w-full">
+      <!-- Contribution Graph (Heatmap) -->
+      <div class="bg-brandCard border border-brandBorder rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 relative shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-calendar-alt text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Activity Heatmap</h3>
+          </div>
+          <span class="text-xs text-zinc-400 font-mono" id="heatmap-year-label">Yearly Activity</span>
+        </div>
+        
+        <!-- Graph container -->
+        <div class="relative overflow-hidden pb-4">
+          <!-- Month Labels -->
+          <div class="grid grid-flow-col gap-[3px] mb-2 text-[10px] text-zinc-500 font-mono text-left h-4 w-full min-w-0 pl-[32px]" id="heatmap-months">
+            <!-- Dynamic months inject here -->
+          </div>
+          
+          <div class="flex items-stretch gap-2 w-full min-w-0">
+            <!-- Day labels: Perfectly aligned with the dynamic height of the grid rows -->
+            <div class="grid grid-rows-7 gap-[3px] w-6 text-[9px] text-zinc-500 font-mono select-none pr-1 items-center">
+              <span class="flex items-center justify-end">Su</span>
+              <span class="flex items-center justify-end">Mo</span>
+              <span class="flex items-center justify-end">Tu</span>
+              <span class="flex items-center justify-end">We</span>
+              <span class="flex items-center justify-end">Th</span>
+              <span class="flex items-center justify-end">Fr</span>
+              <span class="flex items-center justify-end">Sa</span>
+            </div>
+            
+            <!-- Grid Cells: Matches height and layout of day labels -->
+            <div class="grid grid-flow-col grid-rows-7 gap-[3px] w-full select-none" id="heatmap-cells">
+              <!-- Dynamic cells inject here -->
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Tooltip -->
+        <div id="heatmap-tooltip" class="absolute hidden z-30 bg-zinc-900 border border-brandBorder text-zinc-100 text-[11px] px-3 py-1.5 rounded-lg shadow-xl font-mono pointer-events-none">
+          No activity
+        </div>
+ 
+        <!-- Legend -->
+        <div class="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 font-mono mt-3">
+          <span>Less</span>
+          <div class="w-2.5 h-2.5 rounded-[2px] bg-zinc-800 border border-transparent"></div>
+          <div class="w-2.5 h-2.5 rounded-[2px] bg-emerald-950 border border-emerald-900/40"></div>
+          <div class="w-2.5 h-2.5 rounded-[2px] bg-emerald-800 border border-emerald-700/40"></div>
+          <div class="w-2.5 h-2.5 rounded-[2px] bg-emerald-600 border border-emerald-500/40"></div>
+          <div class="w-2.5 h-2.5 rounded-[2px] bg-emerald-400 border border-emerald-300 shadow-sm shadow-emerald-400/20"></div>
+          <span>More</span>
+        </div>
+      </div>
+    </section>
+ 
+    <!-- SECTION 2.5: ACHIEVEMENTS -->
+    <section id="achievements-section" class="w-full">
+      <!-- Achievements List -->
+      <div class="bg-brandCard border border-brandBorder rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 flex flex-col shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-zinc-800/60 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-trophy text-amber-400 animate-pulse"></i>
+            <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Achievements</h3>
+          </div>
+          <span class="text-xs bg-amber-950/80 text-amber-300 px-2.5 py-0.5 border border-amber-900/50 rounded-md font-mono" id="achievements-score">0 / 11</span>
+        </div>
+        
+        <!-- Achievements container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="achievements-list">
+          <!-- Dynamic achievements inject here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ANALYTICS -->
+    <section id="analytics-section" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-sliders text-emerald-400"></i>
+        <h2 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Analytics Panel</h2>
+      </div>
+
+      <div class="bg-brandCard border border-brandBorder rounded-xl p-6 space-y-6 shadow-sm">
+        <!-- Stat Grid (Detailed) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Total Tasks</span>
+            <div class="text-lg font-bold font-mono text-zinc-100" id="an-total">0</div>
+          </div>
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Completed</span>
+            <div class="text-lg font-bold font-mono text-emerald-400" id="an-completed">0</div>
+          </div>
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Pending</span>
+            <div class="text-lg font-bold font-mono text-amber-400" id="an-pending">0</div>
+          </div>
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Cancelled</span>
+            <div class="text-lg font-bold font-mono text-rose-400" id="an-cancelled">0</div>
+          </div>
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Est. Time</span>
+            <div class="text-lg font-bold font-mono text-zinc-100" id="an-est-time">0h</div>
+          </div>
+          <div class="bg-zinc-950 border border-brandBorder p-4 rounded-xl space-y-1">
+            <span class="text-[10px] font-mono tracking-wide uppercase text-zinc-500">Actual Time</span>
+            <div class="text-lg font-bold font-mono text-sky-400" id="an-act-time">0h</div>
+          </div>
+        </div>
+
+        <!-- Middle Row Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-zinc-950 border border-brandBorder p-5 rounded-xl space-y-3">
+            <h4 class="title-sm">Time Analysis</h4>
+            <div class="space-y-4 font-mono text-sm">
+              <div class="flex justify-between items-center pb-2 border-b border-brandBorder">
+                <span class="text-zinc-400 text-xs">Avg. Daily Hours</span>
+                <span class="font-bold text-zinc-200" id="an-avg-hours">0.0h</span>
+              </div>
+              <div class="flex justify-between items-center pb-2 border-b border-brandBorder">
+                <span class="text-zinc-400 text-xs">Avg. Task Duration</span>
+                <span class="font-bold text-zinc-200" id="an-avg-duration">0 min</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400 text-xs">Est. vs Actual Diff</span>
+                <span class="font-bold" id="an-diff">0 min</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Task Distribution -->
+          <div class="bg-zinc-950 border border-brandBorder p-5 rounded-xl space-y-3">
+            <h4 class="title-sm">Completed Tasks by Category</h4>
+            <div class="space-y-2 font-mono text-xs" id="an-cat-tasks">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Category Focus Hours -->
+          <div class="bg-zinc-950 border border-brandBorder p-5 rounded-xl space-y-3">
+            <h4 class="title-sm">Hours by Category</h4>
+            <div class="space-y-2 font-mono text-xs" id="an-cat-hours">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: CHARTS -->
+    <section id="charts-section" class="space-y-4">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-chart-line text-emerald-400"></i>
+        <h2 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Visual Insights</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Tasks by Category -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Tasks by Category
+          </h3>
+          <div class="relative h-[220px]">
+            <canvas id="tasksByCategoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Hours by Category -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Study Hours by Category
+          </h3>
+          <div class="relative h-[220px]">
+            <canvas id="hoursByCategoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Task Status -->
+        <div class="bg-brandCard border border-brandBorder rounded-xl p-5 hover:border-zinc-700 transition-all duration-300 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Task Status Breakdown
+          </h3>
+          <div class="relative h-[220px]">
+            <canvas id="taskStatusChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: EDIT TASK (Hidden by default, shown as modal or inline popup) -->
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+      <div class="bg-[#18181b] border border-[#27272a] max-w-lg w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4" id="editModalContent">
+        <div class="flex items-center justify-between border-b border-[#27272a] pb-3">
+          <div class="flex items-center gap-2 text-zinc-400">
+            <i class="fa-solid fa-edit"></i>
+            <h3 class="font-bold text-zinc-200">Edit Task</h3>
+          </div>
+          <button onclick="closeEditModal()" class="text-zinc-400 hover:text-zinc-200 transition-colors">
+            <i class="fa-solid fa-times text-lg"></i>
+          </button>
+        </div>
+        
+        <form id="edit-task-form" onsubmit="saveEditTask(event)" class="space-y-4">
+          <input type="hidden" id="edit-task-id">
+          
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Task Title</label>
+            <input type="text" id="edit-task-title" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-zinc-400">Category</label>
+                <button type="button" onclick="addNewCategoryPrompt('edit-task-category')" class="text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 font-semibold">
+                  <i class="fa-solid fa-folder-open"></i> Manage Categories
+                </button>
+              </div>
+              <select id="edit-task-category" required onchange="handleCategoryChange('edit-task-category')" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+                <option value="Programming">Programming</option>
+                <option value="Cyber Security">Cyber Security</option>
+                <option value="CC ISC2">CC ISC2</option>
+                <option value="English">English</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Est. Time (Mins)</label>
+              <input type="number" id="edit-task-est" required min="1" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-zinc-500 transition-all">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Priority</label>
+              <select id="edit-task-priority" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Date</label>
+              <input type="date" id="edit-task-date" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-zinc-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Status</label>
+              <select id="edit-task-status" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Notes</label>
+            <textarea id="edit-task-notes" rows="2" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-600"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-[#27272a] text-zinc-300 rounded-lg text-sm font-semibold transition-all">Cancel</button>
+            <button type="submit" class="px-5 py-2 bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] rounded-lg text-sm font-bold transition-all shadow-md">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECTION 6: CREATE TASK (Full screen width) -->
+    <section class="bg-brandCard border border-brandBorder rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 shadow-sm" id="create-task-section">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-square-plus text-emerald-400"></i>
+        <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Create Task</h3>
+      </div>
+      
+      <form id="create-task-form" onsubmit="createTask(event)" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Title</label>
+            <input type="text" id="task-title" required placeholder="Study Domain 2, solve 3 Leetcode..." class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-600">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Notes (Optional)</label>
+            <input type="text" id="task-notes" placeholder="Key chapters, checklist, specific URLs..." class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-600">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-medium text-zinc-400">Category</label>
+              <button type="button" onclick="addNewCategoryPrompt('task-category')" class="text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-folder-open"></i> Manage Categories
+              </button>
+            </div>
+            <select id="task-category" required onchange="handleCategoryChange('task-category')" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+              <option value="Programming">Programming</option>
+              <option value="Cyber Security">Cyber Security</option>
+              <option value="CC ISC2">CC ISC2</option>
+              <option value="English">English</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Est. Time (Minutes)</label>
+            <input type="number" id="task-est" required min="1" placeholder="45" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-zinc-500 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Priority</label>
+            <select id="task-priority" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Task Date</label>
+            <input type="date" id="task-date" required class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-zinc-500 transition-all">
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button type="submit" class="w-full md:w-auto px-6 bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] font-bold py-2.5 rounded-lg transition-all shadow-md flex items-center justify-center gap-2">
+            <i class="fa-solid fa-plus"></i> Add Task
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- SECTION 7: ALL REGISTERED TASKS (Full screen width) -->
+    <section class="bg-brandCard border border-brandBorder rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 space-y-4 shadow-sm" id="tasks-section">
+        
+        <!-- List Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-tasks text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">All Registered Tasks</h3>
+          </div>
+          
+          <!-- Backups / Actions -->
+          <div class="flex items-center gap-2">
+            <button onclick="exportData()" title="Backup to computer" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-brandBorder text-xs text-zinc-400 rounded-lg font-medium transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-file-export"></i> Export JSON
+            </button>
+            <label for="import-file" class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-brandBorder text-xs text-zinc-400 rounded-lg font-medium cursor-pointer transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-file-import"></i> Import JSON
+            </label>
+            <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+            <button onclick="confirmClearAll()" class="px-3 py-1.5 bg-rose-950/40 border border-rose-900/30 hover:bg-rose-950/80 text-xs text-rose-400 rounded-lg font-medium transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-trash-can"></i> Clear All
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-zinc-950 border border-brandBorder p-4 rounded-xl">
+          <!-- Title Search -->
+          <div class="sm:col-span-1">
+            <input type="text" id="filter-search" oninput="render()" placeholder="Search title..." class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-600">
+          </div>
+          <!-- Date Range Filter -->
+          <div>
+            <select id="filter-date-range" onchange="render()" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all font-sans">
+              <option value="Today" selected>Today</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="Last7">Last 7 Days</option>
+              <option value="Last30">Last 30 Days</option>
+              <option value="ThisMonth">This Month</option>
+              <option value="All">All Time</option>
+            </select>
+          </div>
+          <!-- Category Filter -->
+          <div>
+            <select id="filter-category" onchange="render()" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+              <option value="All">All Categories</option>
+              <option value="Programming">Programming</option>
+              <option value="Cyber Security">Cyber Security</option>
+              <option value="CC ISC2">CC ISC2</option>
+              <option value="English">English</option>
+            </select>
+          </div>
+          <!-- Status Filter -->
+          <div>
+            <select id="filter-status" onchange="render()" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+              <option value="All">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <!-- Sorting Filter -->
+          <div>
+            <select id="filter-sort" onchange="render()" class="w-full bg-zinc-950 border border-brandBorder rounded-lg px-3 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all">
+              <option value="Newest">Newest First</option>
+              <option value="Oldest">Oldest First</option>
+              <option value="Priority">Priority (High-Low)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scrollable Table view -->
+        <div class="overflow-x-auto border border-brandBorder rounded-xl bg-zinc-950/20">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-zinc-900/30 border-b border-brandBorder text-zinc-400 font-mono text-[10px] uppercase tracking-wider select-none">
+                <th class="p-3.5 pl-4">Task Details</th>
+                <th class="p-3.5">Category</th>
+                <th class="p-3.5 font-mono">Est. Time</th>
+                <th class="p-3.5 font-mono">Actual Time</th>
+                <th class="p-3.5">Priority</th>
+                <th class="p-3.5">Status</th>
+                <th class="p-3.5">Scheduled</th>
+                <th class="p-3.5 text-right pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table-body" class="divide-y divide-brandBorder">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+    </section>
+
+  </div>
+
+  <!-- FLOATING TIMER PANEL (Sticky bottom control) -->
+  <div id="floating-timer-bar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-zinc-900 border border-brandBorder px-6 py-4 rounded-xl shadow-2xl flex items-center gap-6 max-w-2xl w-11/12 justify-between translate-y-24 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="flex items-center gap-4">
+      <div class="h-10 w-10 rounded-lg bg-zinc-800 border border-brandBorder flex items-center justify-center relative">
+        <span class="flex h-2 w-2 absolute top-0.5 right-0.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+        </span>
+        <i class="fa-solid fa-hourglass-half text-zinc-400 text-lg animate-spin-slow"></i>
+      </div>
+      <div>
+        <div class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Current active task focus:</div>
+        <div class="text-sm font-bold text-zinc-200 truncate max-w-xs md:max-w-md" id="floating-task-title">Learning CC ISC2 Domain 3</div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <div class="text-xl font-bold font-mono text-emerald-400 bg-black border border-brandBorder px-3 py-1 rounded-lg tracking-wider" id="floating-timer-clock">00:00</div>
+      <div class="flex items-center gap-2">
+        <button id="floating-timer-pause-btn" onclick="togglePauseActiveTimer()" class="bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/40 text-amber-300 font-bold px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-pause"></i> Pause
+        </button>
+        <button onclick="finishActiveTimer()" class="bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] font-bold px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Finish
+        </button>
+        <button onclick="cancelActiveTimer()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-brandBorder px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION DIALOG MODAL -->
+  <div id="confirmModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#18181b] border border-[#27272a] max-w-md w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4">
+      <div class="text-center space-y-2">
+        <div class="h-12 w-12 rounded-full bg-rose-950/40 border border-rose-900/30 text-rose-400 mx-auto flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Clear All Data?</h3>
+        <p class="text-xs text-zinc-400">This action will permanently delete all tasks and achievements from the browser.</p>
+      </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button onclick="closeConfirmModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-brandBorder rounded-lg text-xs font-semibold transition-all">Cancel</button>
+        <button onclick="clearAllData()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md">Clear Everything</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DYNAMIC CONFIRMATION DIALOG MODAL -->
+  <div id="genericConfirmModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#18181b] border border-[#27272a] max-w-md w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4">
+      <div class="text-center space-y-2">
+        <div class="h-12 w-12 rounded-full bg-rose-950/40 border border-rose-900/30 text-rose-400 mx-auto flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 id="genericConfirmTitle" class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Confirm Action</h3>
+        <p id="genericConfirmMessage" class="text-xs text-zinc-400">Are you sure you want to proceed?</p>
+      </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button onclick="closeGenericConfirmModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-brandBorder rounded-lg text-xs font-semibold transition-all">Cancel</button>
+        <button id="genericConfirmBtn" onclick="handleGenericConfirm()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-md">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANAGE CATEGORIES DIALOG MODAL -->
+  <div id="addCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#18181b] border border-[#27272a] max-w-md w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4">
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-emerald-400 font-bold">
+            <i class="fa-solid fa-folder-open text-lg"></i>
+            <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Manage Categories</h3>
+          </div>
+          <button onclick="closeAddCategoryModal()" class="text-zinc-500 hover:text-zinc-300 transition-colors">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+        <p class="text-xs text-zinc-400">Add new custom categories or delete existing ones.</p>
+      </div>
+      
+      <!-- Add Section -->
+      <div class="space-y-2 border-b border-zinc-800/60 pb-4">
+        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Add Category</label>
+        <div class="flex items-center gap-2">
+          <input type="text" id="new-category-input" class="flex-1 bg-zinc-950 border border-brandBorder rounded-lg px-4 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-600" placeholder="e.g. Networking, Marketing...">
+          <button onclick="saveNewCategory()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-1.5 h-[38px]">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+
+      <!-- List Section -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Current Categories</label>
+        <div id="modal-categories-list" class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+          <!-- Dynamically populated in JavaScript -->
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t border-zinc-800/60">
+        <button onclick="closeAddCategoryModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-brandBorder rounded-lg text-xs font-semibold transition-all">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // Global App State
+    let state = {
+      tasks: [],
+      activeTaskId: null,
+      startTime: null,
+      isPaused: false,
+      accumulatedSeconds: 0,
+      unlockedAchievements: {},
+      categories: ['Programming', 'Cyber Security', 'CC ISC2', 'English']
+    };
+
+    // Chart.js instances holder
+    let chartInstances = {};
+
+    // Timer Tick Interval
+    let timerInterval = null;
+
+    // Track last date checked for midnight auto-cancellation
+    let lastCheckedDateStr = '';
+
+    // --- UTILITIES ---
+    function getRelativeDateString(daysAgo) {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Dynamic Categories manager
+    function populateCategoryDropdowns() {
+      const taskCategorySelect = document.getElementById('task-category');
+      const editTaskCategorySelect = document.getElementById('edit-task-category');
+      const filterCategorySelect = document.getElementById('filter-category');
+
+      // Keep track of current values
+      const currentTaskCat = taskCategorySelect ? taskCategorySelect.value : '';
+      const currentEditCat = editTaskCategorySelect ? editTaskCategorySelect.value : '';
+      const currentFilterCat = filterCategorySelect ? filterCategorySelect.value : 'All';
+
+      if (taskCategorySelect) {
+        let html = '';
+        state.categories.forEach(cat => {
+          html += `<option value="${cat}">${cat}</option>`;
+        });
+        html += `<option value="_add_new_category_" class="text-emerald-400 font-bold">+ Add Custom Category...</option>`;
+        taskCategorySelect.innerHTML = html;
+        if (currentTaskCat && state.categories.includes(currentTaskCat)) {
+          taskCategorySelect.value = currentTaskCat;
+        } else {
+          taskCategorySelect.value = state.categories[0] || '';
+        }
+      }
+
+      if (editTaskCategorySelect) {
+        let html = '';
+        state.categories.forEach(cat => {
+          html += `<option value="${cat}">${cat}</option>`;
+        });
+        html += `<option value="_add_new_category_" class="text-emerald-400 font-bold">+ Add Custom Category...</option>`;
+        editTaskCategorySelect.innerHTML = html;
+        if (currentEditCat && state.categories.includes(currentEditCat)) {
+          editTaskCategorySelect.value = currentEditCat;
+        } else {
+          editTaskCategorySelect.value = state.categories[0] || '';
+        }
+      }
+
+      if (filterCategorySelect) {
+        let html = `<option value="All">All Categories</option>`;
+        state.categories.forEach(cat => {
+          html += `<option value="${cat}">${cat}</option>`;
+        });
+        filterCategorySelect.innerHTML = html;
+        if (currentFilterCat && (currentFilterCat === 'All' || state.categories.includes(currentFilterCat))) {
+          filterCategorySelect.value = currentFilterCat;
+        } else {
+          filterCategorySelect.value = 'All';
+        }
+      }
+    }
+
+    let targetSelectIdForNewCategory = null;
+
+    function renderCategoryListInModal() {
+      const container = document.getElementById('modal-categories-list');
+      if (!container) return;
+      
+      let html = '';
+      state.categories.forEach(cat => {
+        const encodedCat = encodeURIComponent(cat);
+        html += `
+          <div class="flex items-center justify-between bg-zinc-900/60 hover:bg-zinc-900 border border-brandBorder/60 hover:border-zinc-800 px-3 py-2 rounded-lg transition-all" data-cat-item="${encodedCat}">
+            <div class="flex items-center gap-2 text-zinc-200 text-xs font-medium">
+              <i class="fa-regular fa-folder text-zinc-500"></i>
+              <span>${cat}</span>
+            </div>
+            <button onclick="deleteCategory(decodeURIComponent('${encodedCat}'))" class="text-zinc-500 hover:text-rose-500 p-1 transition-colors flex items-center justify-center h-6 w-6 rounded-md hover:bg-rose-500/10" title="Delete category">
+              <i class="fa-solid fa-trash-can text-xs text-zinc-500 hover:text-rose-500 pointer-events-none"></i>
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    let genericConfirmCallback = null;
+
+    function showCustomConfirm(title, message, onConfirm) {
+      document.getElementById('genericConfirmTitle').innerText = title;
+      document.getElementById('genericConfirmMessage').innerText = message;
+      genericConfirmCallback = onConfirm;
+
+      const modal = document.getElementById('genericConfirmModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+      modal.querySelector('div').classList.remove('scale-95');
+      modal.querySelector('div').classList.add('scale-100');
+    }
+
+    function closeGenericConfirmModal() {
+      const modal = document.getElementById('genericConfirmModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      modal.querySelector('div').classList.add('scale-95');
+      modal.querySelector('div').classList.remove('scale-100');
+      genericConfirmCallback = null;
+    }
+
+    function handleGenericConfirm() {
+      if (typeof genericConfirmCallback === 'function') {
+        genericConfirmCallback();
+      }
+      closeGenericConfirmModal();
+    }
+
+    function deleteCategory(catName) {
+      if (state.categories.length <= 1) {
+        showToast('You must keep at least one category!', 'error', 'fa-triangle-exclamation');
+        return;
+      }
+      
+      const fallbackCat = state.categories.find(c => c !== catName);
+      const affectedTasks = state.tasks.filter(t => t.category === catName);
+      
+      let title = 'Delete Category?';
+      let message = `Are you sure you want to delete the category "${catName}"?`;
+      if (affectedTasks.length > 0) {
+        message = `This category is used by ${affectedTasks.length} task(s). Deleting it will reassign these tasks to "${fallbackCat}". Do you want to proceed?`;
+      }
+      
+      showCustomConfirm(title, message, function() {
+        // Remove from categories
+        state.categories = state.categories.filter(c => c !== catName);
+        
+        // Reassign affected tasks
+        if (affectedTasks.length > 0) {
+          state.tasks.forEach(t => {
+            if (t.category === catName) {
+              t.category = fallbackCat;
+            }
+          });
+          showToast(`Deleted "${catName}". ${affectedTasks.length} tasks moved to "${fallbackCat}".`, 'success', 'fa-trash-can');
+        } else {
+          showToast(`Deleted category: "${catName}"`, 'success', 'fa-trash-can');
+        }
+        
+        saveState();
+        populateCategoryDropdowns();
+        renderCategoryListInModal();
+        render();
+      });
+    }
+
+    function openAddCategoryModal(selectId) {
+      targetSelectIdForNewCategory = selectId;
+      const modal = document.getElementById('addCategoryModal');
+      const input = document.getElementById('new-category-input');
+      if (input) input.value = '';
+      
+      renderCategoryListInModal();
+      
+      if (modal) {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        const content = modal.querySelector('div');
+        if (content) content.classList.remove('scale-95');
+      }
+      setTimeout(() => {
+        if (input) input.focus();
+      }, 100);
+    }
+
+    function closeAddCategoryModal() {
+      const modal = document.getElementById('addCategoryModal');
+      if (modal) {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        const content = modal.querySelector('div');
+        if (content) content.classList.add('scale-95');
+      }
+      if (targetSelectIdForNewCategory) {
+        const select = document.getElementById(targetSelectIdForNewCategory);
+        if (select && select.value === '_add_new_category_') {
+          select.value = state.categories[0] || '';
+        }
+      }
+      targetSelectIdForNewCategory = null;
+    }
+
+    function saveNewCategory() {
+      const input = document.getElementById('new-category-input');
+      const name = input ? input.value.trim() : '';
+      if (!name) {
+        showToast('Please enter a category name', 'error', 'fa-triangle-exclamation');
+        return;
+      }
+
+      if (state.categories.includes(name)) {
+        showToast('Category already exists', 'error', 'fa-triangle-exclamation');
+        return;
+      }
+
+      state.categories.push(name);
+      saveState();
+      populateCategoryDropdowns();
+      renderCategoryListInModal();
+      if (input) input.value = '';
+      showToast(`New category added: "${name}"`, 'success', 'fa-folder-plus');
+
+      if (targetSelectIdForNewCategory) {
+        const select = document.getElementById(targetSelectIdForNewCategory);
+        if (select) {
+          select.value = name;
+        }
+        closeAddCategoryModal();
+      }
+      
+      render();
+    }
+
+    function addNewCategoryPrompt(selectId) {
+      openAddCategoryModal(selectId);
+    }
+
+    function handleCategoryChange(selectId) {
+      const select = document.getElementById(selectId);
+      if (select && select.value === '_add_new_category_') {
+        openAddCategoryModal(selectId);
+      }
+    }
+
+    function formatTime(totalMinutes) {
+      const h = Math.floor(totalMinutes / 60);
+      const m = Math.round(totalMinutes % 60);
+      return `${h}h ${m.toString().padStart(2, '0')}m`;
+    }
+
+    function formatSeconds(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Toast notification manager
+    function showToast(message, type = 'info', icon = 'fa-info-circle') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let typeClasses = 'bg-slate-900 border-slate-800 text-slate-200';
+      if (type === 'success') typeClasses = 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400';
+      if (type === 'error') typeClasses = 'bg-rose-950/90 border-rose-500/30 text-rose-400';
+      if (type === 'achievement') typeClasses = 'bg-amber-950/90 border-amber-500/30 text-amber-300 shadow-amber-500/10';
+
+      toast.className = `flex items-center gap-3 border ${typeClasses} px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-x-24 opacity-0 pointer-events-auto max-w-sm`;
+      toast.innerHTML = `
+        <div class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid ${icon}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+
+      container.appendChild(toast);
+      
+      // Trigger animations
+      setTimeout(() => {
+        toast.classList.remove('translate-x-24', 'opacity-0');
+      }, 50);
+
+      // Remove after 4s
+      setTimeout(() => {
+        toast.classList.add('translate-x-24', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // --- SEED DATA ENGINE ---
+    function populateSeedData() {
+      // 13 continuous days of completed tasks to build high-quality stats + streak right away
+      const seeds = [
+        {
+          id: 's1',
+          title: 'Advanced API and Auth Middleware implementation',
+          category: 'Programming',
+          estimatedTime: 60,
+          actualTime: 65,
+          priority: 'High',
+          status: 'Completed',
+          date: getRelativeDateString(0),
+          completedDate: getRelativeDateString(0),
+          notes: 'Tested Express middleware with Jest unit coverage.'
+        },
+        {
+          id: 's2',
+          title: 'Explored PortSwigger SQL injection labs',
+          category: 'Cyber Security',
+          estimatedTime: 90,
+          actualTime: 110,
+          priority: 'High',
+          status: 'Completed',
+          date: getRelativeDateString(1),
+          completedDate: getRelativeDateString(1),
+          notes: 'Exploited error-based and blind SQL injections successfully.'
+        },
+        {
+          id: 's3',
+          title: 'CC ISC2 Domain 1: Access Control concepts review',
+          category: 'CC ISC2',
+          estimatedTime: 45,
+          actualTime: 40,
+          priority: 'Medium',
+          status: 'Completed',
+          date: getRelativeDateString(2),
+          completedDate: getRelativeDateString(2),
+          notes: 'Mastered MAC, DAC, and RBAC authentication controls.'
+        },
+        {
+          id: 's4',
+          title: 'English conversation podcast study session',
+          category: 'English',
+          estimatedTime: 30,
+          actualTime: 30,
+          priority: 'Low',
+          status: 'Completed',
+          date: getRelativeDateString(3),
+          completedDate: getRelativeDateString(3),
+          notes: 'Practiced advanced speech rhythms and idiomatic phrases.'
+        },
+        {
+          id: 's5',
+          title: 'Tailwind layouts and portfolio concept design',
+          category: 'Programming',
+          estimatedTime: 120,
+          actualTime: 135,
+          priority: 'Medium',
+          status: 'Completed',
+          date: getRelativeDateString(4),
+          completedDate: getRelativeDateString(4),
+          notes: 'Prototyped UI schemas, typography scales, and shadows.'
+        },
+        {
+          id: 's6',
+          title: 'CC ISC2 Domain 2 quiz practice and mock exam',
+          category: 'CC ISC2',
+          estimatedTime: 45,
+          actualTime: 50,
+          priority: 'High',
+          status: 'Completed',
+          date: getRelativeDateString(5),
+          completedDate: getRelativeDateString(5),
+          notes: 'Achieved 92% score on mock quiz.'
+        },
+        {
+          id: 's7',
+          title: 'Cyber Security OWASP Top 10 study & notes',
+          category: 'Cyber Security',
+          estimatedTime: 60,
+          actualTime: 55,
+          priority: 'High',
+          status: 'Completed',
+          date: getRelativeDateString(6),
+          completedDate: getRelativeDateString(6),
+          notes: 'Focused on broken authentication and XML external entities.'
+        },
+        {
+          id: 's8',
+          title: 'Wrote algorithmic data structure solutions',
+          category: 'Programming',
+          estimatedTime: 45,
+          actualTime: 40,
+          priority: 'Medium',
+          status: 'Completed',
+          date: getRelativeDateString(7),
+          completedDate: getRelativeDateString(7),
+          notes: 'Solved 3 hashmap problems on Leetcode.'
+        },
+        {
+          id: 's9',
+          title: 'Read academic paper in English',
+          category: 'English',
+          estimatedTime: 20,
+          actualTime: 25,
+          priority: 'Low',
+          status: 'Completed',
+          date: getRelativeDateString(8),
+          completedDate: getRelativeDateString(8),
+          notes: 'Studied system-design terminology and academic prose.'
+        },
+        {
+          id: 's10',
+          title: 'Configured local networking firewall rules',
+          category: 'Cyber Security',
+          estimatedTime: 40,
+          actualTime: 45,
+          priority: 'Medium',
+          status: 'Completed',
+          date: getRelativeDateString(9),
+          completedDate: getRelativeDateString(9),
+          notes: 'Created custom iptables and verified subnet connectivity.'
+        },
+        {
+          id: 's11',
+          title: 'Refactored backend DB connection pools',
+          category: 'Programming',
+          estimatedTime: 50,
+          actualTime: 45,
+          priority: 'High',
+          status: 'Completed',
+          date: getRelativeDateString(10),
+          completedDate: getRelativeDateString(10),
+          notes: 'Optimized response latency down to ~15ms.'
+        },
+        {
+          id: 's12',
+          title: 'English vocabulary and flashcard review',
+          category: 'English',
+          estimatedTime: 30,
+          actualTime: 30,
+          priority: 'Low',
+          status: 'Completed',
+          date: getRelativeDateString(11),
+          completedDate: getRelativeDateString(11),
+          notes: 'Reviewed 40 flashcards on Anki app.'
+        },
+        {
+          id: 's13',
+          title: 'CC ISC2 Domain 3: Incident Response study',
+          category: 'CC ISC2',
+          estimatedTime: 60,
+          actualTime: 65,
+          priority: 'Medium',
+          status: 'Completed',
+          date: getRelativeDateString(12),
+          completedDate: getRelativeDateString(12),
+          notes: 'Reviewed incident lifecycle steps according to NIST.'
+        },
+        // Two starter pending tasks for today
+        {
+          id: 's14',
+          title: 'Design and prototype landing layouts',
+          category: 'Programming',
+          estimatedTime: 45,
+          actualTime: 0,
+          priority: 'High',
+          status: 'Pending',
+          date: getRelativeDateString(0),
+          notes: 'Using standard Grid layout grids.'
+        },
+        {
+          id: 's15',
+          title: 'Review Network Security chapters',
+          category: 'CC ISC2',
+          estimatedTime: 60,
+          actualTime: 0,
+          priority: 'Medium',
+          status: 'Pending',
+          date: getRelativeDateString(0),
+          notes: 'Revising transport layers and encryption keys.'
+        }
+      ];
+
+      state.tasks = seeds;
+      saveState();
+      showToast('Seeded default study sessions! Enjoy tracking.', 'success', 'fa-seedling');
+    }
+
+    // --- DATA HANDLING & LOCAL STORAGE ---
+    function loadState() {
+      const storedTasks = localStorage.getItem('apex_tracker_tasks');
+      const storedActiveId = localStorage.getItem('apex_tracker_active_id');
+      const storedStartTime = localStorage.getItem('apex_tracker_start_time');
+      const storedAchievements = localStorage.getItem('apex_tracker_achievements');
+      const storedCategories = localStorage.getItem('apex_tracker_categories');
+      const storedIsPaused = localStorage.getItem('apex_tracker_is_paused');
+      const storedAccumSecs = localStorage.getItem('apex_tracker_accumulated_seconds');
+
+      if (storedTasks) {
+        state.tasks = JSON.parse(storedTasks);
+        state.tasks.forEach(t => {
+          if (t.category === 'Other') t.category = 'Programming';
+        });
+      } else {
+        // First load: seed past tasks automatically
+        populateSeedData();
+      }
+
+      if (storedActiveId) {
+        state.activeTaskId = storedActiveId;
+        state.startTime = storedStartTime ? parseInt(storedStartTime, 10) : null;
+        state.isPaused = storedIsPaused === 'true';
+        state.accumulatedSeconds = storedAccumSecs ? parseInt(storedAccumSecs, 10) : 0;
+      } else {
+        state.isPaused = false;
+        state.accumulatedSeconds = 0;
+      }
+
+      if (storedAchievements) {
+        state.unlockedAchievements = JSON.parse(storedAchievements);
+      }
+
+      if (storedCategories) {
+        state.categories = JSON.parse(storedCategories).filter(c => c !== 'Other');
+      } else {
+        state.categories = ['Programming', 'Cyber Security', 'CC ISC2', 'English'];
+      }
+
+      // Automatically populate dropdown menus based on categories list
+      populateCategoryDropdowns();
+    }
+
+    function saveState() {
+      localStorage.setItem('apex_tracker_tasks', JSON.stringify(state.tasks));
+      localStorage.setItem('apex_tracker_achievements', JSON.stringify(state.unlockedAchievements));
+      localStorage.setItem('apex_tracker_categories', JSON.stringify(state.categories));
+      if (state.activeTaskId) {
+        localStorage.setItem('apex_tracker_active_id', state.activeTaskId);
+        if (state.startTime) {
+          localStorage.setItem('apex_tracker_start_time', state.startTime.toString());
+        } else {
+          localStorage.removeItem('apex_tracker_start_time');
+        }
+        localStorage.setItem('apex_tracker_is_paused', state.isPaused.toString());
+        localStorage.setItem('apex_tracker_accumulated_seconds', state.accumulatedSeconds.toString());
+      } else {
+        localStorage.removeItem('apex_tracker_active_id');
+        localStorage.removeItem('apex_tracker_start_time');
+        localStorage.removeItem('apex_tracker_is_paused');
+        localStorage.removeItem('apex_tracker_accumulated_seconds');
+      }
+    }
+
+    // --- STREAK & ACHIEVEMENTS ENGINE ---
+    function calculateStreak() {
+      const completedDates = [...new Set(
+        state.tasks
+          .filter(t => t.status === 'Completed' && t.completedDate)
+          .map(t => t.completedDate)
+      )].sort();
+
+      if (completedDates.length === 0) return { current: 0, max: 0 };
+
+      let maxStreak = 0;
+      let currentRun = 0;
+      let prevTime = null;
+
+      // Max Streak
+      for (const dStr of completedDates) {
+        const currTime = new Date(dStr + 'T00:00:00').getTime();
+        if (prevTime === null) {
+          currentRun = 1;
+        } else {
+          const diffDays = Math.round((currTime - prevTime) / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            currentRun++;
+          } else if (diffDays > 1) {
+            currentRun = 1;
+          }
+        }
+        prevTime = currTime;
+        if (currentRun > maxStreak) maxStreak = currentRun;
+      }
+
+      // Current Streak
+      let currentStreak = 0;
+      const todayStr = getRelativeDateString(0);
+      const yesterdayStr = getRelativeDateString(1);
+
+      if (completedDates.includes(todayStr) || completedDates.includes(yesterdayStr)) {
+        let checkDate = completedDates.includes(todayStr) ? new Date(todayStr + 'T00:00:00') : new Date(yesterdayStr + 'T00:00:00');
+        while (true) {
+          const checkStr = checkDate.toISOString().split('T')[0];
+          if (completedDates.includes(checkStr)) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+
+      return { current: currentStreak, max: maxStreak };
+    }
+
+    function checkAchievements() {
+      const completedTasks = state.tasks.filter(t => t.status === 'Completed');
+      const compCount = completedTasks.length;
+      
+      const studyMins = completedTasks.reduce((sum, t) => sum + (t.actualTime || 0), 0);
+      const studyHrs = studyMins / 60;
+      
+      const streakStats = calculateStreak();
+      const maxStreak = streakStats.max;
+
+      const progCount = completedTasks.filter(t => t.category === 'Programming').length;
+      const cyberCount = completedTasks.filter(t => t.category === 'Cyber Security').length;
+      const ccCount = completedTasks.filter(t => t.category === 'CC ISC2').length;
+      const engCount = completedTasks.filter(t => t.category === 'English').length;
+
+      const config = [
+        { id: 'first_task', title: 'First Task', desc: 'Complete your first study task', target: 1, current: compCount, icon: 'fa-rocket text-sky-400' },
+        { id: '10_tasks', title: '10 Completed Tasks', desc: 'Complete 10 registered tasks', target: 10, current: compCount, icon: 'fa-graduation-cap text-teal-400' },
+        { id: '50_tasks', title: '50 Completed Tasks', desc: 'Complete 50 registered tasks', target: 50, current: compCount, icon: 'fa-brain text-purple-400' },
+        { id: '100_tasks', title: '100 Completed Tasks', desc: 'Complete 100 registered tasks', target: 100, current: compCount, icon: 'fa-crown text-amber-400 animate-pulse' },
+        { id: '7_streak', title: '7 Day Streak', desc: 'Maintain a 7-day study streak', target: 7, current: maxStreak, icon: 'fa-fire text-orange-500' },
+        { id: '30_streak', title: '30 Day Streak', desc: 'Maintain a 30-day study streak', target: 30, current: maxStreak, icon: 'fa-calendar-check text-rose-500' },
+        { id: '50_prog', title: '50 Programming Tasks', desc: 'Complete 50 programming tasks', target: 50, current: progCount, icon: 'fa-keyboard text-blue-400' },
+        { id: '50_cyber', title: '50 Cyber Security Tasks', desc: 'Complete 50 cybersecurity tasks', target: 50, current: cyberCount, icon: 'fa-shield-halved text-red-400' },
+        { id: '30_cc', title: '30 CC ISC2 Tasks', desc: 'Complete 30 CC ISC2 cert tasks', target: 30, current: ccCount, icon: 'fa-certificate text-indigo-400' },
+        { id: '30_eng', title: '30 English Tasks', desc: 'Complete 30 English studies tasks', target: 30, current: engCount, icon: 'fa-language text-emerald-400' },
+        { id: '100_hrs', title: '100 Study Hours', desc: 'Accumulate 100 actual focus hours', target: 100, current: Math.floor(studyHrs), icon: 'fa-hourglass text-yellow-500' }
+      ];
+
+      let unlockedCount = 0;
+      const achievementsList = [];
+
+      config.forEach(ach => {
+        const isMet = ach.current >= ach.target;
+        let unlocked = !!state.unlockedAchievements[ach.id];
+        let unlockDate = state.unlockedAchievements[ach.id] || '';
+
+        if (isMet && !unlocked) {
+          // Trigger unlock
+          unlocked = true;
+          unlockDate = getRelativeDateString(0);
+          state.unlockedAchievements[ach.id] = unlockDate;
+          showToast(`🏆 Unlocked: ${ach.title}!`, 'achievement', 'fa-award');
+        } else if (!isMet && unlocked) {
+          // Relock if tasks deleted/modified
+          delete state.unlockedAchievements[ach.id];
+          unlocked = false;
+          unlockDate = '';
+        }
+
+        if (unlocked) unlockedCount++;
+
+        const ach_progress_pct = Math.min(100, Math.round((ach.current / ach.target) * 100));
+
+        achievementsList.push({
+          ...ach,
+          unlocked,
+          progressPct: ach_progress_pct,
+          unlockDate
+        });
+      });
+
+      return { unlockedCount, totalCount: config.length, list: achievementsList };
+    }
+
+    // --- MIDNIGHT AUTO-CANCELLATION ---
+    function checkMidnightAutoCancellation() {
+      const todayStr = getRelativeDateString(0);
+      
+      if (lastCheckedDateStr !== todayStr) {
+        lastCheckedDateStr = todayStr;
+        
+        let changed = false;
+        let cancelledCount = 0;
+        
+        state.tasks.forEach(task => {
+          if (task.status === 'Pending' && task.date < todayStr) {
+            task.status = 'Cancelled';
+            cancelledCount++;
+            changed = true;
+          }
+        });
+        
+        if (changed) {
+          saveState();
+          render();
+          showToast(`Automatically cancelled ${cancelledCount} pending task(s) at midnight.`, 'info', 'fa-circle-xmark');
+        }
+      }
+    }
+
+    // --- RENDER CLOCK & DATE ---
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour12: true });
+      
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('live-date').innerText = now.toLocaleDateString('en-US', options);
+
+      // Check for midnight auto-cancellation
+      checkMidnightAutoCancellation();
+    }
+
+    // --- MAIN RENDER CONTROLLER ---
+    function render() {
+      // 1. Dashboard calculations
+      renderDashboard();
+
+      // 2. Heatmap and Achievements
+      renderHeatmapAndAchievements();
+
+      // 3. Analytics Panel
+      renderAnalytics();
+
+      // 4. Charts Updates
+      renderCharts();
+
+      // 5. Tasks Table rendering
+      renderTasksTable();
+    }
+
+    // 1. DASHBOARD CARD RENDERING
+    function renderDashboard() {
+      const total = state.tasks.length;
+      const completed = state.tasks.filter(t => t.status === 'Completed').length;
+      const pending = state.tasks.filter(t => t.status === 'Pending').length;
+      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      const studyMins = state.tasks
+        .filter(t => t.status === 'Completed')
+        .reduce((sum, t) => sum + (t.actualTime || 0), 0);
+
+      document.getElementById('stat-total-tasks').innerText = total;
+      document.getElementById('stat-completed-tasks').innerText = completed;
+      document.getElementById('stat-pending-tasks').innerText = pending;
+      document.getElementById('stat-completion-rate').innerText = `${rate}%`;
+      document.getElementById('stat-total-study-time').innerText = formatTime(studyMins);
+    }
+
+    // 2. HEATMAP & ACHIEVEMENTS CARD RENDERING
+    function renderHeatmapAndAchievements() {
+      // 2a. Heatmap Engine
+      const heatmapCells = document.getElementById('heatmap-cells');
+      const heatmapMonths = document.getElementById('heatmap-months');
+      heatmapCells.innerHTML = '';
+      heatmapMonths.innerHTML = '';
+
+      const currentYear = new Date().getFullYear();
+      const yearLabel = document.getElementById('heatmap-year-label');
+      if (yearLabel) {
+        yearLabel.innerText = `${currentYear} Activity`;
+      }
+
+      // January 1st of current year
+      const startDate = new Date(currentYear, 0, 1);
+      // Align to Sunday of that week (getDay() returns 0 for Sunday)
+      startDate.setDate(startDate.getDate() - startDate.getDay());
+
+      // December 31st of current year
+      const endDate = new Date(currentYear, 11, 31);
+      // Align to Saturday of that week (getDay() returns 6 for Saturday)
+      endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+
+      // Calculate total weeks dynamically
+      let tempDate = new Date(startDate);
+      let totalWeeks = 0;
+      while (tempDate <= endDate) {
+        totalWeeks++;
+        tempDate.setDate(tempDate.getDate() + 7);
+      }
+      const totalCells = totalWeeks * 7;
+
+      // Set grid-template-columns dynamically on the months and cells elements to ensure perfect column alignment and full stretch
+      heatmapMonths.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
+      heatmapCells.style.gridTemplateColumns = `repeat(${totalWeeks}, 1fr)`;
+
+      // Extract completions mapped by Date
+      const completedCountMap = {};
+      state.tasks.forEach(task => {
+        if (task.status === 'Completed' && task.completedDate) {
+          completedCountMap[task.completedDate] = (completedCountMap[task.completedDate] || 0) + 1;
+        }
+      });
+
+      // Populate months labels
+      let lastMonthName = '';
+      let lastRenderedCol = -99;
+      for (let col = 0; col < totalWeeks; col++) {
+        const colDate = new Date(startDate);
+        colDate.setDate(startDate.getDate() + (col * 7));
+        const monthName = colDate.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthLabel = document.createElement('div');
+        monthLabel.style.overflow = 'visible';
+        monthLabel.style.whiteSpace = 'nowrap';
+        monthLabel.style.width = '100%';
+        
+        // Render month labels only when month changes and they are at least 4 weeks apart to prevent overlap
+        if (monthName !== lastMonthName && (col - lastRenderedCol >= 4)) {
+          monthLabel.innerText = monthName;
+          lastMonthName = monthName;
+          lastRenderedCol = col;
+        }
+        heatmapMonths.appendChild(monthLabel);
+      }
+
+      // Generate the dynamic cells
+      for (let i = 0; i < totalCells; i++) {
+        const cellDate = new Date(startDate);
+        cellDate.setDate(startDate.getDate() + i);
+        
+        const yyyy = cellDate.getFullYear();
+        const mm = String(cellDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(cellDate.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}-${mm}-${dd}`;
+        
+        const count = completedCountMap[dateStr] || 0;
+        
+        const cell = document.createElement('div');
+        cell.className = 'w-full aspect-square rounded-[2px] transition-all duration-200 cursor-pointer ';
+        
+        // Intensity mapping
+        if (count === 0) cell.className += 'bg-slate-800/40 border border-transparent';
+        else if (count === 1) cell.className += 'bg-emerald-950 border border-emerald-900/30';
+        else if (count === 2) cell.className += 'bg-emerald-800/80 border border-emerald-700/30';
+        else if (count === 3) cell.className += 'bg-emerald-600/90 border border-emerald-500/20';
+        else cell.className += 'bg-emerald-400 border border-emerald-300 shadow-sm shadow-emerald-400/25';
+
+        // Custom absolute tooltip hook
+        cell.addEventListener('mouseover', (e) => {
+          const tooltip = document.getElementById('heatmap-tooltip');
+          tooltip.innerText = `${count} task${count !== 1 ? 's' : ''} completed on ${cellDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          
+          tooltip.classList.remove('hidden');
+          
+          // Position tooltip relative to hovered element (centered above)
+          const rect = cell.getBoundingClientRect();
+          const pRect = cell.offsetParent.getBoundingClientRect();
+          tooltip.style.left = `${rect.left - pRect.left + (rect.width / 2) - 60}px`;
+          tooltip.style.top = `${rect.top - pRect.top - 36}px`;
+        });
+
+        cell.addEventListener('mouseleave', () => {
+          document.getElementById('heatmap-tooltip').classList.add('hidden');
+        });
+
+        heatmapCells.appendChild(cell);
+      }
+
+      // 2b. Achievements Engine
+      const achData = checkAchievements();
+      document.getElementById('achievements-score').innerText = `${achData.unlockedCount} / ${achData.totalCount}`;
+      
+      const achListContainer = document.getElementById('achievements-list');
+      achListContainer.innerHTML = '';
+
+      achData.list.forEach(ach => {
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-xl border flex items-start gap-3 transition-all ${
+          ach.unlocked 
+            ? 'bg-zinc-900/60 border-zinc-700/80' 
+            : 'bg-zinc-950/40 border-brandBorder opacity-50'
+        }`;
+
+        item.innerHTML = `
+          <div class="h-9 w-9 rounded-lg flex items-center justify-center bg-zinc-950 border border-brandBorder text-sm flex-shrink-0 text-zinc-300">
+            <i class="${ach.unlocked ? ach.icon : 'fa-solid fa-lock text-zinc-600'}"></i>
+          </div>
+          <div class="flex-1 min-w-0 space-y-1">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-zinc-200 truncate">${ach.title}</h4>
+              <span class="text-[9px] font-mono ${ach.unlocked ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-500 bg-zinc-950 border-brandBorder'} px-2 py-0.5 rounded border">
+                ${ach.unlocked ? 'Unlocked' : 'Locked'}
+              </span>
+            </div>
+            <p class="text-[10px] text-zinc-400 truncate">${ach.desc}</p>
+            
+            <div class="space-y-1 pt-1">
+              <div class="flex justify-between text-[9px] font-mono text-zinc-500">
+                <span>Progress</span>
+                <span>${ach.current} / ${ach.target}</span>
+              </div>
+              <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-brandBorder">
+                <div class="h-full rounded-full transition-all duration-300 ${ach.unlocked ? 'bg-emerald-500' : 'bg-zinc-700'}" style="width: ${ach.progressPct}%"></div>
+              </div>
+              ${ach.unlockDate ? `<div class="text-[8px] text-emerald-500/80 text-right font-mono">Unlocked: ${ach.unlockDate}</div>` : ''}
+            </div>
+          </div>
+        `;
+        achListContainer.appendChild(item);
+      });
+    }
+
+    // 3. ANALYTICS CARD RENDERING
+    function renderAnalytics() {
+      const total = state.tasks.length;
+      const completed = state.tasks.filter(t => t.status === 'Completed');
+      const pending = state.tasks.filter(t => t.status === 'Pending').length;
+      const cancelled = state.tasks.filter(t => t.status === 'Cancelled').length;
+      
+      const compCount = completed.length;
+      const rate = total > 0 ? Math.round((compCount / total) * 100) : 0;
+
+      const estMins = state.tasks.reduce((sum, t) => sum + (parseInt(t.estimatedTime, 10) || 0), 0);
+      const actMins = completed.reduce((sum, t) => sum + (t.actualTime || 0), 0);
+
+      // Unique days calculation for completed tasks
+      const completedDates = [...new Set(completed.map(t => t.completedDate))];
+      const activeDaysCount = completedDates.length || 1;
+      const avgDailyHrs = (actMins / 60) / activeDaysCount;
+      const avgDuration = compCount > 0 ? Math.round(actMins / compCount) : 0;
+
+      // Est vs Actual Difference (Minutes)
+      const compEstMins = completed.reduce((sum, t) => sum + (parseInt(t.estimatedTime, 10) || 0), 0);
+      const diff = actMins - compEstMins;
+      let diffText = '0 min';
+      let diffClass = 'text-slate-400';
+      
+      if (diff < 0) {
+        diffText = `${Math.abs(diff)} min faster`;
+        diffClass = 'text-emerald-400';
+      } else if (diff > 0) {
+        diffText = `${diff} min slower`;
+        diffClass = 'text-rose-400';
+      }
+
+      // Update text values
+      document.getElementById('an-total').innerText = total;
+      document.getElementById('an-completed').innerText = compCount;
+      document.getElementById('an-pending').innerText = pending;
+      document.getElementById('an-cancelled').innerText = cancelled;
+      document.getElementById('an-est-time').innerText = `${Math.round(estMins / 60)}h`;
+      document.getElementById('an-act-time').innerText = `${Math.round(actMins / 60)}h`;
+
+      document.getElementById('an-avg-hours').innerText = `${avgDailyHrs.toFixed(1)}h`;
+      document.getElementById('an-avg-duration').innerText = `${avgDuration} min`;
+      
+      const diffEl = document.getElementById('an-diff');
+      diffEl.innerText = diffText;
+      diffEl.className = `font-bold ${diffClass}`;
+
+      // Populate completed counts per category
+      const categories = state.categories;
+      const catTasksContainer = document.getElementById('an-cat-tasks');
+      catTasksContainer.innerHTML = '';
+      
+      const catHexColors = [
+        '#3b82f6', '#ef4444', '#a855f7', '#10b981', '#ec4899', '#06b6d4', '#0ea5e9',
+        '#f97316', '#84cc16', '#14b8a6', '#d946ef', '#f43f5e', '#6366f1', '#8b5cf6', '#eab308', '#f59e0b'
+      ];
+      
+      categories.forEach((cat, idx) => {
+        const count = completed.filter(t => t.category === cat).length;
+        const totalCat = state.tasks.filter(t => t.category === cat).length;
+        const catPct = totalCat > 0 ? Math.round((count / totalCat) * 100) : 0;
+        const catColor = catHexColors[idx % catHexColors.length];
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="text-zinc-400">${cat}</span>
+            <span class="text-zinc-200 font-bold">${count} <span class="text-zinc-500 font-normal">/ ${totalCat} (${catPct}%)</span></span>
+          </div>
+          <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-brandBorder">
+            <div class="h-full rounded-full" style="width: ${catPct}%; background-color: ${catColor}"></div>
+          </div>
+        `;
+        catTasksContainer.appendChild(row);
+      });
+
+      // Populate hours per category
+      const catHoursContainer = document.getElementById('an-cat-hours');
+      catHoursContainer.innerHTML = '';
+
+      categories.forEach((cat, idx) => {
+        const mins = completed.filter(t => t.category === cat).reduce((sum, t) => sum + (t.actualTime || 0), 0);
+        const hrs = mins / 60;
+        const totalHrs = actMins / 60;
+        const hrPct = totalHrs > 0 ? Math.round((hrs / totalHrs) * 100) : 0;
+        const catColor = catHexColors[idx % catHexColors.length];
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between items-center text-[11px]">
+            <span class="text-zinc-400">${cat}</span>
+            <span class="text-zinc-200 font-bold">${hrs.toFixed(1)} hrs <span class="text-zinc-500 font-normal">(${hrPct}%)</span></span>
+          </div>
+          <div class="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-brandBorder">
+            <div class="h-full rounded-full" style="width: ${hrPct}%; background-color: ${catColor}"></div>
+          </div>
+        `;
+        catHoursContainer.appendChild(row);
+      });
+    }
+
+    // 4. CHARTS MANAGER (Chart.js implementation)
+    function renderCharts() {
+      const categories = state.categories;
+      const completedTasks = state.tasks.filter(t => t.status === 'Completed');
+
+      // Colors configuration
+      const baseColors = [
+        'rgba(59, 130, 246, 0.8)',   // Blue
+        'rgba(239, 68, 68, 0.8)',    // Red
+        'rgba(168, 85, 247, 0.8)',   // Purple
+        'rgba(16, 185, 129, 0.8)',   // Emerald
+        'rgba(236, 72, 153, 0.8)',   // Pink
+        'rgba(6, 182, 212, 0.8)',    // Cyan
+        'rgba(14, 165, 233, 0.8)',   // Sky
+        'rgba(249, 115, 22, 0.8)',   // Orange
+        'rgba(132, 204, 22, 0.8)',   // Lime
+        'rgba(20, 184, 166, 0.8)',   // Teal
+        'rgba(217, 70, 239, 0.8)',   // Fuchsia
+        'rgba(244, 63, 94, 0.8)',    // Rose
+        'rgba(99, 102, 241, 0.8)',   // Indigo
+        'rgba(139, 92, 246, 0.8)',   // Violet
+        'rgba(234, 179, 8, 0.8)',    // Yellow
+        'rgba(245, 158, 11, 0.8)'    // Amber
+      ];
+      
+      const baseBorders = [
+        '#3B82F6', '#EF4444', '#A855F7', '#10B981', '#EC4899', '#06B6D4', '#0EA5E9',
+        '#F97316', '#84CC16', '#14B8A6', '#D946EF', '#F43F5E', '#6366F1', '#8B5CF6', '#EAB308', '#F59E0B'
+      ];
+
+      const catColors = categories.map((cat, i) => baseColors[i % baseColors.length]);
+      const catBorders = categories.map((cat, i) => baseBorders[i % baseBorders.length]);
+
+      // Chart 1: Tasks by Category
+      // Group tasks by category and map to a data object
+      const tasksByCategoryData = categories.map(cat => ({
+        category: cat,
+        count: state.tasks.filter(t => t.category === cat).length
+      }));
+
+      // Sort categories descending by task count
+      tasksByCategoryData.sort((a, b) => b.count - a.count);
+
+      // Filter out categories with 0 tasks to keep the chart clean and high-contrast
+      let filteredCatData = tasksByCategoryData.filter(d => d.count > 0);
+      if (filteredCatData.length === 0) {
+        // Fallback to top 4 categories if everything has 0 tasks
+        filteredCatData = tasksByCategoryData.slice(0, 4);
+      }
+
+      const chartLabels = filteredCatData.map(d => d.category);
+      const chartCounts = filteredCatData.map(d => d.count);
+
+      // Resolve matching colors for consistent brand identity
+      const chartColors = chartLabels.map(cat => {
+        const originalIdx = categories.indexOf(cat);
+        return baseColors[originalIdx % baseColors.length];
+      });
+      const chartBorders = chartLabels.map(cat => {
+        const originalIdx = categories.indexOf(cat);
+        return baseBorders[originalIdx % baseBorders.length];
+      });
+
+      const tasksCanvas = document.getElementById('tasksByCategoryChart');
+      if (tasksCanvas) {
+        const parent = tasksCanvas.parentElement;
+        if (parent) {
+          const dynamicHeight = Math.max(220, chartLabels.length * 42);
+          parent.style.height = `${dynamicHeight}px`;
+        }
+      }
+
+      buildChart('tasksByCategoryChart', 'bar', {
+        labels: chartLabels,
+        datasets: [{
+          label: 'Total Tasks',
+          data: chartCounts,
+          backgroundColor: chartColors,
+          borderColor: chartBorders,
+          borderWidth: 1.5,
+          borderRadius: {
+            topLeft: 0,
+            bottomLeft: 0,
+            topRight: 8,
+            bottomRight: 8
+          },
+          borderSkipped: 'left',
+          barThickness: 16,
+          maxBarThickness: 20
+        }]
+      }, {
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#18181b',
+            titleColor: '#f4f4f5',
+            bodyColor: '#d4d4d8',
+            borderColor: '#27272a',
+            borderWidth: 1,
+            padding: 10,
+            displayColors: true,
+            boxWidth: 8,
+            boxHeight: 8,
+            boxPadding: 4,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                return ` Tasks: ${context.raw}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.04)',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#71717a',
+              stepSize: 1,
+              font: { family: 'Inter', size: 10 },
+              callback: function(value) {
+                if (value % 1 === 0) return value;
+                return '';
+              }
+            }
+          },
+          y: {
+            grid: {
+              display: false,
+              drawBorder: false
+            },
+            ticks: {
+              color: '#e4e4e7',
+              font: { family: 'Inter', size: 11, weight: '500' },
+              padding: 10
+            }
+          }
+        }
+      });
+
+      // Chart 2: Hours by Category
+      const hoursByCatData = categories.map(cat => {
+        const mins = completedTasks.filter(t => t.category === cat).reduce((sum, t) => sum + (t.actualTime || 0), 0);
+        return parseFloat((mins / 60).toFixed(2));
+      });
+      buildChart('hoursByCategoryChart', 'doughnut', {
+        labels: categories,
+        datasets: [{
+          data: hoursByCatData,
+          backgroundColor: catColors,
+          borderColor: '#151D30',
+          borderWidth: 2
+        }]
+      }, {
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#94A3B8', font: { family: 'Inter', size: 10 }, boxWidth: 12 }
+          }
+        },
+        cutout: '70%'
+      });
+
+      // Chart 3: Task Status
+      const statuses = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+      const statusCounts = statuses.map(st => state.tasks.filter(t => t.status === st).length);
+      const statusColors = [
+        'rgba(100, 116, 139, 0.8)', // Pending (Slate)
+        'rgba(59, 130, 246, 0.8)',  // In Progress (Blue)
+        'rgba(16, 185, 129, 0.8)',  // Completed (Emerald)
+        'rgba(244, 63, 94, 0.8)'    // Cancelled (Rose)
+      ];
+      buildChart('taskStatusChart', 'polarArea', {
+        labels: statuses,
+        datasets: [{
+          data: statusCounts,
+          backgroundColor: statusColors,
+          borderColor: '#151D30',
+          borderWidth: 2
+        }]
+      }, {
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#94A3B8', font: { family: 'Inter', size: 10 }, boxWidth: 12 }
+          }
+        },
+        scales: {
+          r: {
+            grid: { color: '#1E293B' },
+            angleLines: { color: '#1E293B' },
+            ticks: { display: false }
+          }
+        }
+      });
+    }
+
+    function buildChart(canvasId, type, data, extraOptions = {}) {
+      if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+      }
+
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      chartInstances[canvasId] = new Chart(ctx, {
+        type: type,
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          ...extraOptions
+        }
+      });
+    }
+
+    // 5. TASKS TABLE & FILTER RENDERING
+    function renderTasksTable() {
+      const tbody = document.getElementById('tasks-table-body');
+      tbody.innerHTML = '';
+
+      // Fetch filter values
+      const searchVal = document.getElementById('filter-search').value.toLowerCase().trim();
+      const dateRangeVal = document.getElementById('filter-date-range').value;
+      const categoryVal = document.getElementById('filter-category').value;
+      const statusVal = document.getElementById('filter-status').value;
+      const sortVal = document.getElementById('filter-sort').value;
+
+      const todayStr = getRelativeDateString(0);
+      const yesterdayStr = getRelativeDateString(1);
+      const last7Str = getRelativeDateString(7);
+      const last30Str = getRelativeDateString(30);
+
+      // Filtering logic
+      let filtered = state.tasks.filter(task => {
+        const matchesSearch = task.title.toLowerCase().includes(searchVal);
+        const matchesCategory = categoryVal === 'All' || task.category === categoryVal;
+        const matchesStatus = statusVal === 'All' || task.status === statusVal;
+        
+        // Date range matching
+        let matchesDate = true;
+        if (dateRangeVal === 'Today') {
+          matchesDate = (task.date === todayStr);
+        } else if (dateRangeVal === 'Yesterday') {
+          matchesDate = (task.date === yesterdayStr);
+        } else if (dateRangeVal === 'Last7') {
+          matchesDate = (task.date >= last7Str && task.date <= todayStr);
+        } else if (dateRangeVal === 'Last30') {
+          matchesDate = (task.date >= last30Str && task.date <= todayStr);
+        } else if (dateRangeVal === 'ThisMonth') {
+          matchesDate = (task.date.substring(0, 7) === todayStr.substring(0, 7));
+        }
+        
+        return matchesSearch && matchesCategory && matchesStatus && matchesDate;
+      });
+
+      // Sorting logic
+      if (sortVal === 'Newest') {
+        filtered.sort((a, b) => b.id.localeCompare(a.id));
+      } else if (sortVal === 'Oldest') {
+        filtered.sort((a, b) => a.id.localeCompare(b.id));
+      } else if (sortVal === 'Priority') {
+        const weight = { 'High': 3, 'Medium': 2, 'Low': 1 };
+        filtered.sort((a, b) => weight[b.priority] - weight[a.priority]);
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center p-8 text-zinc-500 text-xs">
+              <i class="fa-solid fa-face-meh text-2xl mb-2 block"></i>
+              No matching tasks found. Create one to get started!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      filtered.forEach(task => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-zinc-900/40 border-b border-brandBorder transition-colors duration-150';
+        
+        let catBadge = '';
+        const catIdx = state.categories.indexOf(task.category);
+        const badgeClasses = [
+          'bg-blue-500/10 text-blue-400 border border-blue-500/20',        // Programming
+          'bg-red-500/10 text-red-400 border border-red-500/20',          // Cyber Security
+          'bg-purple-500/10 text-purple-400 border border-purple-500/20',    // CC ISC2
+          'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',// English
+          'bg-pink-500/10 text-pink-400 border border-pink-500/20',
+          'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
+          'bg-sky-500/10 text-sky-400 border border-sky-500/20',
+          'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+          'bg-lime-500/10 text-lime-400 border border-lime-500/20',
+          'bg-teal-500/10 text-teal-400 border border-teal-500/20',
+          'bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20',
+          'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+          'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
+          'bg-violet-500/10 text-violet-400 border border-violet-500/20',
+          'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+        ];
+        if (catIdx !== -1) {
+          catBadge = badgeClasses[catIdx % badgeClasses.length];
+        } else {
+          catBadge = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        }
+
+        let priBadge = '';
+        if (task.priority === 'High') priBadge = 'text-red-400 bg-red-500/10 border border-red-500/20';
+        else if (task.priority === 'Medium') priBadge = 'text-amber-400 bg-amber-500/10 border border-amber-500/20';
+        else priBadge = 'text-zinc-400 bg-zinc-800 border border-brandBorder';
+
+        let stBadge = '';
+        if (task.status === 'Completed') stBadge = 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20';
+        else if (task.status === 'Cancelled') stBadge = 'text-rose-400 bg-rose-950/40 border border-rose-900/30';
+        else if (task.status === 'In Progress') stBadge = 'text-blue-400 bg-blue-500/10 border border-blue-500/20 animate-pulse';
+        else stBadge = 'text-zinc-400 bg-zinc-800 border border-brandBorder';
+
+        // Action Buttons Setup
+        let actionsHtml = '';
+        const isThisActive = state.activeTaskId === task.id;
+        const anyActive = state.activeTaskId !== null;
+
+        if (task.status !== 'Completed') {
+          if (task.status === 'In Progress' && isThisActive) {
+            // Ticking task: Finish button
+            actionsHtml = `
+              <button onclick="finishActiveTimer()" class="bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all">
+                <i class="fa-solid fa-check"></i> Finish
+              </button>
+            `;
+          } else {
+            // Start button
+            const disabledAttr = anyActive ? 'disabled title="Timer already running on another task"' : '';
+            const opacityClass = anyActive ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-200';
+            actionsHtml = `
+              <button onclick="startTaskTimer('${task.id}')" ${disabledAttr} class="bg-[#fafafa] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all ${opacityClass}">
+                <i class="fa-solid fa-play"></i> Start
+              </button>
+            `;
+          }
+        }
+
+        // Add Edit, Duplicate & Delete regardless
+        actionsHtml += `
+          <button onclick="showEditModal('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1.5" title="Edit">
+            <i class="fa-solid fa-edit"></i>
+          </button>
+          <button onclick="duplicateTask('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1" title="Duplicate">
+            <i class="fa-solid fa-copy"></i>
+          </button>
+          <button onclick="deleteTask('${task.id}')" class="bg-rose-950/40 border border-rose-900/30 hover:bg-rose-950/80 text-rose-400 p-1.5 rounded-lg text-[10px] transition-all ml-1" title="Delete">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+
+        // Elapsed tick cell mapping
+        let elapsedCell = '0 min';
+        if (task.status === 'Completed') {
+          elapsedCell = `${task.actualTime || 0} min`;
+        } else if (task.status === 'In Progress' && isThisActive) {
+          const elapsedSecs = getActiveElapsedSeconds();
+          const pulseClass = state.isPaused ? '' : 'animate-pulse';
+          const textColor = state.isPaused ? 'text-amber-400' : 'text-emerald-400';
+          const icon = state.isPaused ? '<i class="fa-solid fa-pause text-[9px] mr-1"></i>' : '';
+          elapsedCell = `<span class="font-mono ${textColor} font-bold ${pulseClass} flex items-center gap-1" id="ticker-${task.id}">${icon}${formatSeconds(elapsedSecs)}</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="p-3.5 pl-4 max-w-xs">
+            <div class="font-bold text-zinc-200 truncate" title="${task.title}">${task.title}</div>
+            ${task.notes ? `<div class="text-[10px] text-zinc-500 truncate" title="${task.notes}">${task.notes}</div>` : ''}
+          </td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${catBadge}">${task.category}</span></td>
+          <td class="p-3.5 font-mono text-zinc-300">${task.estimatedTime}m</td>
+          <td class="p-3.5 font-mono text-zinc-300">${elapsedCell}</td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${priBadge}">${task.priority}</span></td>
+          <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${stBadge}">${task.status}</span></td>
+          <td class="p-3.5 font-mono text-zinc-400">${task.date}</td>
+          <td class="p-3.5 text-right pr-4 whitespace-nowrap">${actionsHtml}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- TASK MANAGEMENT OPERATIONS ---
+
+    // GET ELAPSED SECONDS (CONSIDERING PAUSE)
+    function getActiveElapsedSeconds() {
+      if (!state.activeTaskId) return 0;
+      let elapsed = state.accumulatedSeconds || 0;
+      if (state.startTime && !state.isPaused) {
+        elapsed += Math.floor((Date.now() - state.startTime) / 1000);
+      }
+      return elapsed;
+    }
+
+    // TOGGLE PAUSE/RESUME ON TIMER
+    function togglePauseActiveTimer() {
+      if (!state.activeTaskId) return;
+
+      if (!state.isPaused) {
+        // Pausing: add running seconds to accumulator, set startTime to null
+        if (state.startTime) {
+          state.accumulatedSeconds += Math.floor((Date.now() - state.startTime) / 1000);
+        }
+        state.startTime = null;
+        state.isPaused = true;
+        showToast('Timer paused', 'info', 'fa-pause');
+      } else {
+        // Resuming: set startTime to now
+        state.startTime = Date.now();
+        state.isPaused = false;
+        showToast('Timer resumed', 'success', 'fa-play');
+      }
+
+      saveState();
+      updatePauseResumeButtonUI();
+      render();
+    }
+
+    function updatePauseResumeButtonUI() {
+      const btn = document.getElementById('floating-timer-pause-btn');
+      if (!btn) return;
+      
+      if (state.isPaused) {
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Resume`;
+        btn.className = 'bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5';
+      } else {
+        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+        btn.className = 'bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/40 text-amber-300 font-bold px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5';
+      }
+    }
+
+    // START TIMER
+    function startTaskTimer(taskId) {
+      if (state.activeTaskId) {
+        showToast('Please stop or complete the active task first!', 'error', 'fa-lock');
+        return;
+      }
+
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      task.status = 'In Progress';
+      state.activeTaskId = taskId;
+      state.startTime = Date.now();
+      state.isPaused = false;
+      state.accumulatedSeconds = 0;
+      
+      saveState();
+      initTimerTick();
+      render();
+      showToast(`Started: ${task.title}`, 'info', 'fa-hourglass-start');
+    }
+
+    // TICK HANDLER
+    function initTimerTick() {
+      if (timerInterval) clearInterval(timerInterval);
+      
+      const bar = document.getElementById('floating-timer-bar');
+
+      if (!state.activeTaskId) {
+        bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+        bar.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        return;
+      }
+
+      // Populate bar items
+      const activeTask = state.tasks.find(t => t.id === state.activeTaskId);
+      if (activeTask) {
+        document.getElementById('floating-task-title').innerText = activeTask.title;
+        
+        // Show bar
+        bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+        bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        
+        // Update pause/resume button visual state
+        updatePauseResumeButtonUI();
+      }
+
+      timerInterval = setInterval(() => {
+        if (!state.activeTaskId) {
+          clearInterval(timerInterval);
+          return;
+        }
+
+        const elapsedSecs = getActiveElapsedSeconds();
+        const clockStr = formatSeconds(elapsedSecs);
+
+        // Update floating bar clock
+        document.getElementById('floating-timer-clock').innerText = clockStr;
+
+        // Update table ticker cell if exists
+        const tickerEl = document.getElementById(`ticker-${state.activeTaskId}`);
+        if (tickerEl) {
+          const pulseClass = state.isPaused ? '' : 'animate-pulse';
+          const textColor = state.isPaused ? 'text-amber-400' : 'text-emerald-400';
+          const icon = state.isPaused ? '<i class="fa-solid fa-pause text-[9px] mr-1"></i>' : '';
+          
+          tickerEl.innerText = '';
+          tickerEl.className = `font-mono ${textColor} font-bold ${pulseClass} flex items-center gap-1`;
+          tickerEl.innerHTML = `${icon}${clockStr}`;
+        }
+      }, 1000);
+    }
+
+    // FINISH ACTIVE TIMER
+    function finishActiveTimer() {
+      if (!state.activeTaskId) return;
+
+      const task = state.tasks.find(t => t.id === state.activeTaskId);
+      if (!task) return;
+
+      const elapsedSecs = getActiveElapsedSeconds();
+      // Convert to minutes, rounding up to nearest whole minute to give credit for short tasks
+      const elapsedMins = Math.max(1, Math.round(elapsedSecs / 60));
+
+      task.status = 'Completed';
+      task.actualTime = elapsedMins;
+      task.completedDate = getRelativeDateString(0); // Today
+
+      state.activeTaskId = null;
+      state.startTime = null;
+      state.isPaused = false;
+      state.accumulatedSeconds = 0;
+
+      saveState();
+      initTimerTick();
+      render();
+      showToast(`Completed: ${task.title} (+${elapsedMins}m)`, 'success', 'fa-check');
+    }
+
+    // CANCEL TIMER
+    function cancelActiveTimer() {
+      if (!state.activeTaskId) return;
+
+      const task = state.tasks.find(t => t.id === state.activeTaskId);
+      if (!task) return;
+
+      task.status = 'Pending';
+      state.activeTaskId = null;
+      state.startTime = null;
+      state.isPaused = false;
+      state.accumulatedSeconds = 0;
+
+      saveState();
+      initTimerTick();
+      render();
+      showToast('Timer cancelled', 'info', 'fa-undo');
+    }
+
+    // CREATE TASK
+    function createTask(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('task-title').value.trim();
+      const category = document.getElementById('task-category').value;
+      const est = parseInt(document.getElementById('task-est').value, 10);
+      const priority = document.getElementById('task-priority').value;
+      const date = document.getElementById('task-date').value;
+      const notes = document.getElementById('task-notes').value.trim();
+
+      const newTask = {
+        id: 't' + Date.now(),
+        title,
+        category,
+        estimatedTime: est,
+        actualTime: 0,
+        priority,
+        status: 'Pending',
+        date,
+        notes
+      };
+
+      state.tasks.push(newTask);
+      saveState();
+      render();
+      
+      // Clear Form
+      document.getElementById('create-task-form').reset();
+      document.getElementById('task-date').value = getRelativeDateString(0);
+      
+      showToast('Task added successfully!', 'success', 'fa-circle-plus');
+    }
+
+    // EDIT MODAL CONTROLS
+    function showEditModal(taskId) {
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      document.getElementById('edit-task-id').value = task.id;
+      document.getElementById('edit-task-title').value = task.title;
+      document.getElementById('edit-task-category').value = task.category;
+      document.getElementById('edit-task-est').value = task.estimatedTime;
+      document.getElementById('edit-task-priority').value = task.priority;
+      document.getElementById('edit-task-date').value = task.date;
+      document.getElementById('edit-task-status').value = task.status;
+      document.getElementById('edit-task-notes').value = task.notes || '';
+
+      const modal = document.getElementById('editModal');
+      const content = document.getElementById('editModalContent');
+
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+      content.classList.remove('scale-95');
+      content.classList.add('scale-100');
+    }
+
+    function closeEditModal() {
+      const modal = document.getElementById('editModal');
+      const content = document.getElementById('editModalContent');
+
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      content.classList.add('scale-95');
+      content.classList.remove('scale-100');
+    }
+
+    function saveEditTask(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('edit-task-id').value;
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      const oldStatus = task.status;
+      const newStatus = document.getElementById('edit-task-status').value;
+
+      task.title = document.getElementById('edit-task-title').value.trim();
+      task.category = document.getElementById('edit-task-category').value;
+      task.estimatedTime = parseInt(document.getElementById('edit-task-est').value, 10);
+      task.priority = document.getElementById('edit-task-priority').value;
+      task.date = document.getElementById('edit-task-date').value;
+      task.status = newStatus;
+      task.notes = document.getElementById('edit-task-notes').value.trim();
+
+      // Manage active timer integrity
+      if (oldStatus === 'In Progress' && newStatus !== 'In Progress') {
+        if (state.activeTaskId === id) {
+          state.activeTaskId = null;
+          state.startTime = null;
+        }
+      } else if (oldStatus !== 'In Progress' && newStatus === 'In Progress') {
+        if (state.activeTaskId && state.activeTaskId !== id) {
+          showToast('Cannot run multiple timers. Suspended previous.', 'error', 'fa-triangle-exclamation');
+        }
+        state.activeTaskId = id;
+        state.startTime = Date.now();
+      }
+
+      // Handle completed dates
+      if (newStatus === 'Completed' && !task.completedDate) {
+        task.completedDate = getRelativeDateString(0);
+        if (!task.actualTime) task.actualTime = task.estimatedTime; // Fallback if completed manually
+      } else if (newStatus !== 'Completed') {
+        task.completedDate = null;
+        task.actualTime = 0;
+      }
+
+      saveState();
+      initTimerTick();
+      closeEditModal();
+      render();
+      showToast('Task updated successfully', 'success', 'fa-save');
+    }
+
+    // DELETE TASK
+    function deleteTask(taskId) {
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      showCustomConfirm(
+        'Delete Task?',
+        `Are you sure you want to delete the task:\n"${task.title}"?`,
+        function() {
+          if (state.activeTaskId === taskId) {
+            state.activeTaskId = null;
+            state.startTime = null;
+          }
+          state.tasks = state.tasks.filter(t => t.id !== taskId);
+          saveState();
+          initTimerTick();
+          render();
+          showToast('Task deleted', 'info', 'fa-trash');
+        }
+      );
+    }
+
+    // DUPLICATE TASK
+    function duplicateTask(taskId) {
+      const task = state.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const duplicatedTask = {
+        id: 't' + Date.now(),
+        title: task.title,
+        category: task.category,
+        estimatedTime: task.estimatedTime,
+        actualTime: 0,
+        priority: task.priority,
+        status: 'Pending',
+        date: getRelativeDateString(0), // Duplicated tasks get today's date so they are ready for action
+        notes: task.notes || ''
+      };
+
+      state.tasks.push(duplicatedTask);
+      saveState();
+      render();
+      showToast(`Task duplicated successfully: ${duplicatedTask.title}`, 'success', 'fa-copy');
+    }
+
+    // CLEAR ALL DATA CONFIRMATION MODAL
+    function confirmClearAll() {
+      const modal = document.getElementById('confirmModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+    }
+
+    function closeConfirmModal() {
+      const modal = document.getElementById('confirmModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+    }
+
+    function clearAllData() {
+      localStorage.clear();
+      state = {
+        tasks: [],
+        activeTaskId: null,
+        startTime: null,
+        isPaused: false,
+        accumulatedSeconds: 0,
+        unlockedAchievements: {},
+        categories: ['Programming', 'Cyber Security', 'CC ISC2', 'English']
+      };
+      
+      saveState();
+      populateCategoryDropdowns();
+      closeConfirmModal();
+      initTimerTick();
+      render();
+      showToast('All dashboard data cleared!', 'error', 'fa-dumpster');
+    }
+
+    // BACKUPS: EXPORT & IMPORT
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", `auraboard_backup_${getRelativeDateString(0)}.json`);
+      dlAnchorElem.click();
+      showToast('Backup JSON exported successfully!', 'success', 'fa-download');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.tasks)) {
+            state.tasks = imported.tasks;
+            state.activeTaskId = imported.activeTaskId || null;
+            state.startTime = imported.startTime || null;
+            state.unlockedAchievements = imported.unlockedAchievements || {};
+            
+            saveState();
+            initTimerTick();
+            render();
+            showToast('Backup restored successfully!', 'success', 'fa-upload');
+          } else {
+            showToast('Invalid backup file structure.', 'error', 'fa-warning');
+          }
+        } catch (err) {
+          showToast('Failed to parse backup JSON.', 'error', 'fa-warning');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- APPLICATION STARTUP ---
+    window.onload = function() {
+      // Set default input date to today
+      document.getElementById('task-date').value = getRelativeDateString(0);
+      
+      // Load local states
+      loadState();
+      
+      // Initialize systems
+      updateClock();
+      setInterval(updateClock, 1000);
+      
+      // Start active timer if any
+      initTimerTick();
+      
+      // Render components & layout
+      render();
+    };
+  </script>
+</body>
+</html>
