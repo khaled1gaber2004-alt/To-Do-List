@@ -2144,13 +2144,6 @@
           }
         }
 
-        // Individual deletion is disabled for all tasks. Must use Clear All.
-        let deleteBtnHtml = `
-          <button disabled class="bg-zinc-950 border border-zinc-900 text-zinc-600 p-1.5 rounded-lg text-[10px] cursor-not-allowed opacity-40 ml-1" title="Individual task deletion is disabled. Clear via 'Clear All' button.">
-            <i class="fa-solid fa-lock text-zinc-500"></i>
-          </button>
-        `;
-
         actionsHtml += `
           <button onclick="showEditModal('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1.5" title="Edit">
             <i class="fa-solid fa-edit"></i>
@@ -2158,7 +2151,6 @@
           <button onclick="duplicateTask('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1" title="Duplicate">
             <i class="fa-solid fa-copy"></i>
           </button>
-          ${deleteBtnHtml}
         `;
 
         // Elapsed tick cell mapping
