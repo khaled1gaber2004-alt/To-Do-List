@@ -683,6 +683,72 @@
     </div>
   </div>
 
+  <!-- CREATE TASK CONFIRMATION MODAL -->
+  <div id="createConfirmModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#18181b] border border-[#27272a] max-w-lg w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4" id="createConfirmModalContent">
+      <div class="flex items-center gap-2.5 pb-3 border-b border-[#27272a]">
+        <div class="h-9 w-9 rounded-lg bg-emerald-950/40 border border-emerald-900/30 text-emerald-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-zinc-200 uppercase tracking-wider">Confirm Task Details</h3>
+          <p class="text-[10px] text-zinc-500">Please review task details carefully before registering.</p>
+        </div>
+      </div>
+
+      <!-- Task Details Preview -->
+      <div class="space-y-3 bg-zinc-950/40 border border-brandBorder/50 rounded-xl p-4 text-xs">
+        <div class="space-y-1">
+          <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Title</span>
+          <div id="confirm-preview-title" class="text-zinc-200 font-semibold text-sm leading-relaxed break-words">Task title placeholder</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <div class="space-y-1">
+            <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Category</span>
+            <div>
+              <span id="confirm-preview-category" class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-zinc-300 bg-zinc-800 border border-brandBorder">Category placeholder</span>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Estimated Time</span>
+            <div id="confirm-preview-est" class="text-zinc-200 font-mono font-medium">45 min</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-1">
+          <div class="space-y-1">
+            <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Priority</span>
+            <div>
+              <span id="confirm-preview-priority" class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-zinc-300 bg-zinc-800 border border-brandBorder">Medium</span>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Scheduled Date</span>
+            <div id="confirm-preview-date" class="text-zinc-200 font-mono font-medium">2026-07-04</div>
+          </div>
+        </div>
+
+        <div id="confirm-preview-notes-container" class="space-y-1 pt-1 border-t border-[#27272a]/40">
+          <span class="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Notes</span>
+          <div id="confirm-preview-notes" class="text-zinc-400 italic break-words">No notes provided</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-[11px] text-amber-500/90 bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg">
+        <i class="fa-solid fa-circle-exclamation text-xs shrink-0 mt-0.5"></i>
+        <span>Once registered, tasks must be completed or carefully managed. Make sure the parameters are correct!</span>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeCreateConfirmModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-brandBorder rounded-lg text-xs font-semibold transition-all font-sans">Cancel</button>
+        <button onclick="finalizeCreateTask()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-1.5 font-sans">
+          <i class="fa-solid fa-check"></i> Register Task
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MANAGE CATEGORIES DIALOG MODAL -->
   <div id="addCategoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300">
     <div class="bg-[#18181b] border border-[#27272a] max-w-md w-full rounded-xl shadow-2xl p-6 transform scale-95 transition-all duration-300 space-y-4">
@@ -2078,7 +2144,13 @@
           }
         }
 
-        // Add Edit, Duplicate & Delete regardless
+        // Individual deletion is disabled for all tasks. Must use Clear All.
+        let deleteBtnHtml = `
+          <button disabled class="bg-zinc-950 border border-zinc-900 text-zinc-600 p-1.5 rounded-lg text-[10px] cursor-not-allowed opacity-40 ml-1" title="Individual task deletion is disabled. Clear via 'Clear All' button.">
+            <i class="fa-solid fa-lock text-zinc-500"></i>
+          </button>
+        `;
+
         actionsHtml += `
           <button onclick="showEditModal('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1.5" title="Edit">
             <i class="fa-solid fa-edit"></i>
@@ -2086,9 +2158,7 @@
           <button onclick="duplicateTask('${task.id}')" class="bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-brandBorder p-1.5 rounded-lg text-[10px] transition-all ml-1" title="Duplicate">
             <i class="fa-solid fa-copy"></i>
           </button>
-          <button onclick="deleteTask('${task.id}')" class="bg-rose-950/40 border border-rose-900/30 hover:bg-rose-950/80 text-rose-400 p-1.5 rounded-lg text-[10px] transition-all ml-1" title="Delete">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          ${deleteBtnHtml}
         `;
 
         // Elapsed tick cell mapping
@@ -2288,7 +2358,9 @@
       showToast('Timer cancelled', 'info', 'fa-undo');
     }
 
-    // CREATE TASK
+    let pendingNewTask = null;
+
+    // CREATE TASK WITH CONFIRMATION
     function createTask(event) {
       event.preventDefault();
 
@@ -2299,26 +2371,103 @@
       const date = document.getElementById('task-date').value;
       const notes = document.getElementById('task-notes').value.trim();
 
-      const newTask = {
-        id: 't' + Date.now(),
+      pendingNewTask = {
         title,
         category,
         estimatedTime: est,
-        actualTime: 0,
         priority,
-        status: 'Pending',
         date,
         notes
+      };
+
+      // Populate confirmation modal preview elements
+      document.getElementById('confirm-preview-title').innerText = title;
+      document.getElementById('confirm-preview-category').innerText = category;
+      document.getElementById('confirm-preview-est').innerText = `${est} min`;
+      document.getElementById('confirm-preview-priority').innerText = priority;
+      document.getElementById('confirm-preview-date').innerText = date;
+      
+      const previewNotes = document.getElementById('confirm-preview-notes');
+      const notesContainer = document.getElementById('confirm-preview-notes-container');
+      if (notes) {
+        previewNotes.innerText = notes;
+        previewNotes.className = "text-zinc-350 break-words";
+        notesContainer.classList.remove('hidden');
+      } else {
+        previewNotes.innerText = 'No notes provided';
+        previewNotes.className = "text-zinc-600 italic break-words";
+      }
+
+      // Priority styling inside preview
+      const priEl = document.getElementById('confirm-preview-priority');
+      priEl.className = "inline-block px-2 py-0.5 rounded text-[10px] font-semibold";
+      if (priority === 'High') {
+        priEl.classList.add('text-rose-400', 'bg-rose-950/40', 'border', 'border-rose-900/30');
+      } else if (priority === 'Medium') {
+        priEl.classList.add('text-amber-400', 'bg-amber-500/10', 'border', 'border-amber-500/20');
+      } else {
+        priEl.classList.add('text-zinc-400', 'bg-zinc-800', 'border', 'border-brandBorder');
+      }
+
+      // Category styling inside preview
+      const catEl = document.getElementById('confirm-preview-category');
+      catEl.className = "inline-block px-2 py-0.5 rounded text-[10px] font-semibold";
+      if (category === 'Programming') {
+        catEl.classList.add('text-blue-400', 'bg-blue-500/10', 'border', 'border-blue-500/20');
+      } else if (category === 'Cyber Security') {
+        catEl.classList.add('text-rose-400', 'bg-rose-950/40', 'border', 'border-rose-900/30');
+      } else if (category === 'CC ISC2') {
+        catEl.classList.add('text-purple-400', 'bg-purple-500/10', 'border', 'border-purple-500/20');
+      } else if (category === 'English') {
+        catEl.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/20');
+      } else {
+        catEl.classList.add('text-zinc-300', 'bg-zinc-800', 'border', 'border-brandBorder');
+      }
+
+      // Open Modal
+      const modal = document.getElementById('createConfirmModal');
+      const content = document.getElementById('createConfirmModalContent');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+      content.classList.remove('scale-95');
+      content.classList.add('scale-100');
+    }
+
+    function closeCreateConfirmModal() {
+      const modal = document.getElementById('createConfirmModal');
+      const content = document.getElementById('createConfirmModalContent');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      content.classList.add('scale-95');
+      content.classList.remove('scale-100');
+      pendingNewTask = null;
+    }
+
+    // FINALIZE AND SAVE TASK
+    function finalizeCreateTask() {
+      if (!pendingNewTask) return;
+
+      const newTask = {
+        id: 't' + Date.now(),
+        title: pendingNewTask.title,
+        category: pendingNewTask.category,
+        estimatedTime: pendingNewTask.estimatedTime,
+        actualTime: 0,
+        priority: pendingNewTask.priority,
+        status: 'Pending',
+        date: pendingNewTask.date,
+        notes: pendingNewTask.notes
       };
 
       state.tasks.push(newTask);
       saveState();
       render();
-      
+
       // Clear Form
       document.getElementById('create-task-form').reset();
       document.getElementById('task-date').value = getRelativeDateString(0);
-      
+
+      closeCreateConfirmModal();
       showToast('Task added successfully!', 'success', 'fa-circle-plus');
     }
 
@@ -2405,24 +2554,7 @@
 
     // DELETE TASK
     function deleteTask(taskId) {
-      const task = state.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      showCustomConfirm(
-        'Delete Task?',
-        `Are you sure you want to delete the task:\n"${task.title}"?`,
-        function() {
-          if (state.activeTaskId === taskId) {
-            state.activeTaskId = null;
-            state.startTime = null;
-          }
-          state.tasks = state.tasks.filter(t => t.id !== taskId);
-          saveState();
-          initTimerTick();
-          render();
-          showToast('Task deleted', 'info', 'fa-trash');
-        }
-      );
+      showToast('Individual task deletion is disabled. Clear via "Clear All" button.', 'error', 'fa-lock');
     }
 
     // DUPLICATE TASK
