@@ -2124,24 +2124,22 @@
         const isThisActive = state.activeTaskId === task.id;
         const anyActive = state.activeTaskId !== null;
 
-        if (task.status !== 'Completed') {
-          if (task.status === 'In Progress' && isThisActive) {
-            // Ticking task: Finish button
-            actionsHtml = `
-              <button onclick="finishActiveTimer()" class="bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all">
-                <i class="fa-solid fa-check"></i> Finish
-              </button>
-            `;
-          } else {
-            // Start button
-            const disabledAttr = anyActive ? 'disabled title="Timer already running on another task"' : '';
-            const opacityClass = anyActive ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-200';
-            actionsHtml = `
-              <button onclick="startTaskTimer('${task.id}')" ${disabledAttr} class="bg-[#fafafa] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all ${opacityClass}">
-                <i class="fa-solid fa-play"></i> Start
-              </button>
-            `;
-          }
+        if (task.status === 'In Progress' && isThisActive) {
+          // Ticking task: Finish button
+          actionsHtml = `
+            <button onclick="finishActiveTimer()" class="bg-[#fafafa] hover:bg-[#eaeaea] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all">
+              <i class="fa-solid fa-check"></i> Finish
+            </button>
+          `;
+        } else if (task.status === 'Pending' && task.date >= todayStr) {
+          // Start button
+          const disabledAttr = anyActive ? 'disabled title="Timer already running on another task"' : '';
+          const opacityClass = anyActive ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-200';
+          actionsHtml = `
+            <button onclick="startTaskTimer('${task.id}')" ${disabledAttr} class="bg-[#fafafa] text-[#09090b] font-bold px-2.5 py-1 rounded-lg text-[10px] transition-all ${opacityClass}">
+              <i class="fa-solid fa-play"></i> Start
+            </button>
+          `;
         }
 
         actionsHtml += `
@@ -2241,6 +2239,12 @@
 
       const task = state.tasks.find(t => t.id === taskId);
       if (!task) return;
+
+      const todayStr = getRelativeDateString(0);
+      if (task.status === 'Cancelled' || task.date < todayStr) {
+        showToast('Cannot start a cancelled or past task!', 'error', 'fa-lock');
+        return;
+      }
 
       task.status = 'In Progress';
       state.activeTaskId = taskId;
